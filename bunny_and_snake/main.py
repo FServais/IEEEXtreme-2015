@@ -16,14 +16,18 @@ class GameState(object):
         player = 0
         while self._curr_dice < len(self._dices):
             ret = self.play(player)
+
             if ret == GameState.CYCLE:
                 print("PLAYER {} WINS BY EVIL CYCLE!".format(player + 1))
                 return
             elif ret == GameState.WIN:
-                print(' '.join(str(player) for player in self._players))
+                self._print_player_pos()
                 return
             player = (player + 1) % len(self._players)
-        print(' '.join(str(player) for player in self._players))
+        self._print_player_pos()
+
+    def _print_player_pos(self):
+        print(' '.join(str(min(player, self._board_size)) for player in self._players))
 
     def play(self, player):
         reached_slots = set()
