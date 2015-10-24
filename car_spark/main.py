@@ -112,6 +112,7 @@ class Booking(object):
         return self.__repr__()
 
 if __name__ == "__main__" :
+
     T = int(input())
 
     for _ in range(0, T):
