@@ -24,6 +24,63 @@ class HandEnum(object):
          SCISSORS: "Scissors"
     }
 
+    GAME_GR = {
+        (LIZARD, SCISSORS): ['B', 'T', 'T', 'B'],
+        (LIZARD, LIZARD): ['T', 'B'],
+        (PAPER, SCISSORS): ['B', 'T', 'T', 'B'],
+        (PAPER, ROCK): ['A'],
+        (PAPER, LIZARD): ['B', 'B'],
+        (ROCK, SCISSORS): ['A', 'B'],
+        (ROCK, PAPER): ['B'],
+        (ROCK, ROCK): ['T'],
+        (ROCK, LIZARD): ['A', 'B'],
+        (ROCK, SPOCK): ['B'],
+        (SCISSORS, SCISSORS): ['T', 'T', 'T', 'B'],
+        (SCISSORS, ROCK): ['B'],
+        (SCISSORS, LIZARD): ['A'],
+        (SCISSORS, PAPER): ['A'],
+        (SPOCK, SCISSORS): ['A', 'T', 'T', 'B'],
+        (SPOCK, PAPER): ['B'],
+        (SPOCK, ROCK): ['A', 'T', 'T', 'B'],
+        (SPOCK, SPOCK): ['T', 'T', 'B'],
+        (SPOCK, LIZARD): ['B', 'B']
+    }
+
+    CYCLES = {
+        1: {
+            (LIZARD, SPOCK): ("A", (LIZARD, PAPER)),
+            (LIZARD, PAPER): ("A", (LIZARD, SPOCK))
+        },
+        2: {
+            (LIZARD, ROCK): ("B", (PAPER, SPOCK)),
+            (PAPER, SPOCK): ("A", (PAPER, PAPER)),
+            (PAPER, PAPER): ("T", (SCISSORS, SPOCK)),
+            (SCISSORS, SPOCK): ("B", (LIZARD, ROCK))
+        }
+    }
+
+    CYCLE_ENTRANCE = {
+        (LIZARD, SCISSORS): (LIZARD, ROCK),
+        (LIZARD, LIZARD): (LIZARD, ROCK),
+        (PAPER, SCISSORS): (LIZARD, ROCK),
+        (PAPER, ROCK): (PAPER, SPOCK),
+        (PAPER, LIZARD): (LIZARD, ROCK),
+        (ROCK, SCISSORS): (LIZARD, ROCK),
+        (ROCK, PAPER): (SCISSORS, SPOCK),
+        (ROCK, ROCK): (PAPER, SPOCK),
+        (ROCK, LIZARD): (LIZARD, ROCK),
+        (ROCK, SPOCK): (LIZARD, ROCK),
+        (SCISSORS, SCISSORS): (LIZARD, ROCK),
+        (SCISSORS, PAPER): (SCISSORS, SPOCK),
+        (SCISSORS, ROCK): (PAPER, SPOCK),
+        (SCISSORS, LIZARD): (SCISSORS, SPOCK),
+        (SPOCK, SCISSORS): (LIZARD, ROCK),
+        (SPOCK, PAPER): (SCISSORS, SPOCK),
+        (SPOCK, ROCK): (LIZARD, ROCK),
+        (SPOCK, SPOCK): (LIZARD, ROCK),
+        (SPOCK, LIZARD): (LIZARD, ROCK)
+    }
+
     # hand 1 beats hand 2 ?
     @staticmethod
     def beats(hand1, hand2):
@@ -55,6 +112,54 @@ class HandEnum(object):
     def ties(hand1, hand2):
         return hand2 == hand1
 
+    @staticmethod
+    def compute_score(n, starting_hand):
+        # node is in a cycle
+        if starting_hand in HandEnum.CYCLES[1]:
+            return HandEnum.compute_score_cycle(n, 1, starting_hand)
+        if starting_hand in HandEnum.CYCLES[2]:
+            return HandEnum.compute_score_cycle(n, 2, starting_hand)
+
+        alice_score = [0, 0, 0]
+        path = HandEnum.GAME_GR[starting_hand]
+        HandEnum.score_evt_update(alice_score, path[0:min(n,len(path))])
+
+        if n <= len(path):
+            return alice_score
+        else:
+            return HandEnum.compute_score_cycle(n - len(path), 2, HandEnum.CYCLE_ENTRANCE[starting_hand], alice_score=alice_score)
+
+    @staticmethod
+    def score_evt_update(alice_score, evt_lst, n=1):
+        for evt in evt_lst:
+            if evt == "A":
+                alice_score[0] += n
+            elif evt == "B":
+                alice_score[2] += n
+            else:
+                alice_score[1] += n
+        return alice_score
+
+    @staticmethod
+    def mk_evt_array_from_cycle(cycle_id, entry_node):
+        lst = [HandEnum.CYCLES[cycle_id][entry_node][0]]
+        next_node = HandEnum.CYCLES[cycle_id][entry_node][1]
+        while next_node != entry_node:
+            lst.append(HandEnum.CYCLES[cycle_id][next_node][0])
+            next_node = HandEnum.CYCLES[cycle_id][next_node][1]
+        return lst
+
+    @staticmethod
+    def compute_score_cycle(n, cycle_id, entry_node, alice_score=None):
+        if alice_score is None:
+            alice_score = [0, 0, 0]
+        evt_lst = HandEnum.mk_evt_array_from_cycle(cycle_id, entry_node)
+        nb_cycles = n // len(evt_lst)
+        nb_hop = n % len(evt_lst)
+        if nb_cycles > 0:
+            HandEnum.score_evt_update(alice_score, evt_lst, n=nb_cycles)
+        HandEnum.score_evt_update(alice_score, evt_lst[0:nb_hop])
+        return alice_score
 
 class Bob(object):
 
@@ -96,6 +201,9 @@ class Tournament(object):
     def __init__(self):
         self._alice_score = [0,0,0]
 
+    def compute_score(self, start_hand, n):
+        self._alice_score = HandEnum.compute_score(n, start_hand)
+
     def print_report(self):
         if self._alice_score[0] == self._alice_score[2]:
             print("Alice and Bob tie, each winning {} game(s) and tying {} game(s)".format(self._alice_score[0], self._alice_score[1]))
@@ -120,31 +228,13 @@ def parse_test_case():
 
 
 if __name__ == "__main__":
-    from itertools import combinations_with_replacement
-    hands = [HandEnum.SCISSORS, HandEnum.PAPER, HandEnum.ROCK, HandEnum.SPOCK, HandEnum.LIZARD]
-    comb = []
-    for hand1 in hands:
-        for hand2 in hands:
-            comb.append((hand1, hand2))
-    print(comb)
 
-    for c in comb:
-        alice, bob = c[0], c[1]
-        alice_next, bob_next = Alice.next(alice, bob), Bob.next(bob, alice)
-        print("{},{} -> {} -> {},{}".format(HandEnum.HAND_TO_STR[alice],
-                                            HandEnum.HAND_TO_STR[bob],
-                                            "A" if HandEnum.beats(alice, bob) else ("T" if HandEnum.ties(alice, bob) else "B"),
-                                            HandEnum.HAND_TO_STR[alice_next],
-                                            HandEnum.HAND_TO_STR[bob_next]))
-
-    #T = int(input())
-    #for _ in range(0, T):
-    #    alice_hand, bob_hand, n = parse_test_case()
-    #    tournament = Tournament()
-    #    for i in range(0, n):
-    #        tournament.record_turn(alice_hand, bob_hand)
-    #        alice_hand, bob_hand = Alice.next(alice_hand, bob_hand), Bob.next(bob_hand, alice_hand)
-    #    tournament.print_report()
+    T = int(input())
+    for _ in range(0, T):
+        alice_hand, bob_hand, n = parse_test_case()
+        tournament = Tournament()
+        tournament.compute_score((alice_hand,bob_hand), n)
+        tournament.print_report()
 
 
 
