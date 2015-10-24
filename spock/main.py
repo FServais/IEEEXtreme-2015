@@ -16,11 +16,19 @@ class HandEnum(object):
         "Scissors": SCISSORS
     }
 
+    HAND_TO_STR = {
+         ROCK: "Rock",
+         LIZARD: "Lizard",
+         PAPER: "Paper",
+         SPOCK: "Spock",
+         SCISSORS: "Scissors"
+    }
+
     # hand 1 beats hand 2 ?
     @staticmethod
     def beats(hand1, hand2):
         if hand1 == HandEnum.SPOCK:
-            return hand2 != HandEnum.PAPER and hand2 != HandEnum.LIZARD  and hand2 != HandEnum.SPOCK
+            return hand2 != HandEnum.PAPER and hand2 != HandEnum.LIZARD and hand2 != HandEnum.SPOCK
         elif hand1 == HandEnum.LIZARD:
             return hand2 != HandEnum.SCISSORS and hand2 != HandEnum.ROCK and hand2 != HandEnum.LIZARD
         elif hand1 == HandEnum.ROCK:
@@ -112,11 +120,31 @@ def parse_test_case():
 
 
 if __name__ == "__main__":
-    T = int(input())
-    for _ in range(0, T):
-        alice_hand, bob_hand, n = parse_test_case()
-        tournament = Tournament()
-        for i in range(0, n):
-            tournament.record_turn(alice_hand, bob_hand)
-            alice_hand, bob_hand = Alice.next(alice_hand, bob_hand), Bob.next(bob_hand, alice_hand)
-        tournament.print_report()
+    from itertools import combinations_with_replacement
+    hands = [HandEnum.SCISSORS, HandEnum.PAPER, HandEnum.ROCK, HandEnum.SPOCK, HandEnum.LIZARD]
+    comb = []
+    for hand1 in hands:
+        for hand2 in hands:
+            comb.append((hand1, hand2))
+    print(comb)
+
+    for c in comb:
+        alice, bob = c[0], c[1]
+        alice_next, bob_next = Alice.next(alice, bob), Bob.next(bob, alice)
+        print("{},{} -> {} -> {},{}".format(HandEnum.HAND_TO_STR[alice],
+                                            HandEnum.HAND_TO_STR[bob],
+                                            "A" if HandEnum.beats(alice, bob) else ("T" if HandEnum.ties(alice, bob) else "B"),
+                                            HandEnum.HAND_TO_STR[alice_next],
+                                            HandEnum.HAND_TO_STR[bob_next]))
+
+    #T = int(input())
+    #for _ in range(0, T):
+    #    alice_hand, bob_hand, n = parse_test_case()
+    #    tournament = Tournament()
+    #    for i in range(0, n):
+    #        tournament.record_turn(alice_hand, bob_hand)
+    #        alice_hand, bob_hand = Alice.next(alice_hand, bob_hand), Bob.next(bob_hand, alice_hand)
+    #    tournament.print_report()
+
+
+
