@@ -46,6 +46,9 @@ def nb_tacos(shells, meat, rice, beans):
     if ingrs[_mid] == ingrs[_min] == 0:
         return min(nb_tacos_1, shells)
 
+    if ingrs[_max] > ingrs[_mid] * 2:
+        return min(nb_tacos_1 + ingrs[_min] * 2, shells)
+
     # make all equals
     nb_tacos_2 = 2 * (ingrs[_max] - ingrs[_mid])
     ingrs[_max] -= nb_tacos_2
