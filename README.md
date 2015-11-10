@@ -1,6 +1,5 @@
 # IEEEXtreme-2015
 This repository contains our tries to solve some problems of the IEEEXtreme 2015. 
-Note : This is imported from our personal GitLab-repo.
 
 ## Team
 - Guillaume Lempereur (@guigui2993)
