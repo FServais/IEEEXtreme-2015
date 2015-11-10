@@ -1,5 +1,5 @@
 # IEEEXtreme-2015
-This repository contains our tries to solve some problems of the IEEEXtreme 2015. 
+This repository contains our tries to solve some problems of the IEEEXtreme 2015 contest. 
 
 ## Team
 - Guillaume Lempereur (@guigui2993)
