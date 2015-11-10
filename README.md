@@ -1,5 +1,5 @@
 # IEEEXtreme-2015
-This repository contains our tries to solve some problems of the IEEEXtreme 2015 contest. 
+This repository contains our tries to solve some problems of the [IEEEXtreme 2015](http://www.ieee.org/membership_services/membership/students/competitions/xtreme/index.html) contest. 
 
 ## Team
 - Guillaume Lempereur (@guigui2993)
